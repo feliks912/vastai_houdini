@@ -1,9 +1,9 @@
 rm /scripts/inotify.log # In case the instance has stopped, not been terminated
 
-inotifywait -m -r -e create -e modify --timefmt '%d-%m-%Y %H:%M:%S' --format '%T %w%f %e' "$HOUDINI_PROJECT_FOLDER" | while read -r DATE TIME FILE EVENT
+inotifywait -m -r -e create -e modify --timefmt '%d-%m-%Y %H:%M:%S' --format '%T %w%f %e' "${HOUDINI_PROJECTS_PATH%/}/" | while read -r DATE TIME FILE EVENT
 do
     # Standardize the directory path by removing any trailing slash
-    standardized_project_dir="${HOUDINI_PROJECT_FOLDER%/}"
+    standardized_project_dir="${HOUDINI_PROJECTS_PATH%/}"
 
     # Get the directory path of the file and standardize it
     file_dir=$(dirname "$FILE")

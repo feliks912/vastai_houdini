@@ -7,18 +7,24 @@ touch "$log_path"  # Ensure the log file exists
 : "${FIRST_JOB_CHECK_TIME:=10}"
 : "${NEXT_JOB_CHECK_TIME:=5}"
 
-function kill_container(){
-	kill -s SIGKILL "$(ps -a | awk '{print $1}' | grep -v PID | sort -n | head -1)"
+function destroy_instance(){
+	if [ "$STOP_NO_TERMINATE" = "1" ]; then
+    echo "Files uploaded to cloud. Stopping."
+    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).stop_instance(id=int(os.getenv("INSTANCE_ID")))'
+  else
+    echo "Files uploaded to cloud. Terminating."
+    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).destroy_instance(id=int(os.getenv("INSTANCE_ID")))'
+  fi
 }
 
 function prepare_container_shutdown(){
 	bash /scripts/compress_files.sh
-	kill_container
+	destroy_instance
 }
 
 declare -A running_jobs
 
-(sleep "$FIRST_JOB_CHECK_TIME" && [ "${NO_JOB_KILL:-1}" = "1" ] && echo "No jobs detected. Exiting docker instance." && kill_container) &
+(sleep "$FIRST_JOB_CHECK_TIME" && [ "${NO_JOB_KILL:-1}" = "1" ] && echo "No jobs detected. Exiting docker instance." && destroy_instance) &
 timer_pid=$!
 
 tail -n0 -F "$log_path" | while read -r line; do

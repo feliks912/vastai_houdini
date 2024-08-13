@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     inotify-tools micro pigz rclone ca-certificates openssl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && update-ca-certificates \
+    && update-ca-certificates
 
 # Stage 2: Houdini installation
 FROM base AS houdini-installer

@@ -78,6 +78,6 @@ source /home/feliks/miniconda3/bin/activate base
 echo "This is the key: $VASTAI_API_KEY"
 
     # Run the Python script as the original user
-#python3 /opt/houdini_scripts/hqserver_handler.py --server-ip "$PUBLIC_IP" --server-port "$SERVER_PORT" --query-file "$QUERY_PATH"
+python3 /opt/houdini_scripts/hqserver_handler.py --server-ip "$PUBLIC_IP" --server-port "$SERVER_PORT" --query-file "$QUERY_PATH"
 
 wait $vopono_job_id
