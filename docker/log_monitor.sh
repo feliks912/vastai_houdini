@@ -8,12 +8,15 @@ touch "$log_path"  # Ensure the log file exists
 : "${NEXT_JOB_CHECK_TIME:=5}"
 
 function destroy_instance(){
+
+  container_id=${VAST_CONTAINERLABEL//[!0-9]/}
+
 	if [ "$STOP_NO_TERMINATE" = "1" ]; then
     echo "Files uploaded to cloud. Stopping."
-    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).stop_instance(id=int(os.getenv("INSTANCE_ID")))'
+    vastai stop instance "$container_id" --retry 5 --api-key "$VASTAI_API_KEY"
   else
     echo "Files uploaded to cloud. Terminating."
-    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).destroy_instance(id=int(os.getenv("INSTANCE_ID")))'
+    vastai destroy instance "$container_id" --retry 5 --api-key "$VASTAI_API_KEY"
   fi
 }
 
@@ -26,6 +29,9 @@ declare -A running_jobs
 
 (sleep "$FIRST_JOB_CHECK_TIME" && [ "${NO_JOB_KILL:-1}" = "1" ] && echo "No jobs detected. Exiting docker instance." && destroy_instance) &
 timer_pid=$!
+
+echo "Current jobs in the job log file:"
+cat "$log_path"
 
 tail -n0 -F "$log_path" | while read -r line; do
     if [[ "$line" =~ Running\ job\ ([0-9]+) ]]; then

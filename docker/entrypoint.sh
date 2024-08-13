@@ -30,6 +30,8 @@ rclone copy -vv "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/${PROJ
   --no-traverse \
   --create-empty-src-dirs
 
+rm /houdini/hqueue_client/hqnode.pid
+echo "5001" | tee /houdini/hqueue_client/hqnode.port
 echo -e "[main]\nserver = $HQUEUE_SERVER_IP\nport = $HQUEUE_SERVER_PORT\n[job_environment]" | tee /houdini/hqueue_client/hqnode.ini
 
 # Start the license server

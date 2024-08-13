@@ -1,23 +1,12 @@
-rm /scripts/inotify.log # In case the instance has stopped, not been terminated
+# Remove any previous checksums file
+rm -f "/tmp/initial_checksums.md5"
 
-inotifywait -m -r -e create -e modify --timefmt '%d-%m-%Y %H:%M:%S' --format '%T %w%f %e' "${HOUDINI_PROJECTS_PATH%/}/" | while read -r DATE TIME FILE EVENT
-do
-    # Standardize the directory path by removing any trailing slash
-    standardized_project_dir="${HOUDINI_PROJECTS_PATH%/}"
+# Generate a list of all files and their MD5 checksums
+# Using 'find' to locate all files and 'md5sum' to generate checksums
+# Using 'sort' to ensure consistent order for later comparison
+find "${HOUDINI_PROJECTS_PATH%/}" -type f -print0 | xargs -0 md5sum | sort > "/tmp/initial_checksums.md5"
 
-    # Get the directory path of the file and standardize it
-    file_dir=$(dirname "$FILE")
-    standardized_file_dir="${file_dir%/}"
+echo "Initial checksums recorded."
 
-    # Check if the file's directory is exactly the Houdini project folder and it's not a directory
-    if [[ "$standardized_file_dir" == "$standardized_project_dir" && ! -d "$FILE" ]]; then
-        # Ignore file events in the root of the Houdini project directory
-        continue
-    fi
-
-    # Log all other events
-    echo "$DATE $TIME $FILE $EVENT" >> /scripts/inotify.log
-done &
-
-/houdini/hqueue_client/hqclientd force-reload
+/houdini/hqueue_client/hqclientd start
 bash /scripts/log_monitor.sh &

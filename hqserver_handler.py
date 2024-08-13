@@ -6,7 +6,7 @@ import argparse
 import datetime
 import vastai_instance_handler as vastai_handler
 import os
-import zipfile
+import tarfile
 import read_configuration as conf
 
 
@@ -120,7 +120,7 @@ def main(server_ip, server_port, configuration_file):
                                                                 "")  # project_folder_name/.../hip_file.hip
 
                 rclone_gcloud_name = local_vars.get("RCLONE_GCLOUD_NAME")  # gdrive
-                gcloud_projects_folder = local_vars.get("GCLOUD_ROOT_PROJECTS_FOLDER")  # /rclone_mint/houdini_projects
+                gcloud_projects_folder = local_vars.get("GCLOUD_ROOT_PROJECTS_FOLDER")  # /houdini_projects
 
                 print("Uploading latest hip file to the cloud")
 
@@ -197,19 +197,22 @@ def main(server_ip, server_port, configuration_file):
 
                         vastai_handler.destroy_all_instances()
 
-                        download_command = f"rclone copy {rclone_gcloud_name}:{compressed_file_name} {local_project_path}"
+                        download_command = f"rclone copy {rclone_gcloud_name}:{"/" + str(gcloud_projects_folder).strip('/') + "/" }{compressed_file_name} {local_project_path}"
                         subprocess.run(download_command, shell=True)
                         print(f"Downloading {compressed_file_name} to {local_project_path}")
 
                         print("file downloaded. Extracting")
-                        zip_path = os.path.normcase(os.path.join(local_project_path, compressed_file_name))
+                        tar_path = os.path.normcase(os.path.join(local_project_path, compressed_file_name))
 
                         # Extract the file
-                        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                            zip_ref.extractall(local_project_path)
+                        with tarfile.open(tar_path, "r:gz") as tar_ref:
+                            tar_ref.extractall(local_project_path)
                         print("File extracted.")
 
-                        print("DONE")
+                        os.remove(tar_path)
+                        print("File removed successfully.")
+
+                        print("JOB DONE")
 
                         safety_flag = False
                         break
@@ -231,8 +234,7 @@ def main(server_ip, server_port, configuration_file):
 
 if __name__ == "__main__":
     # Argument parsing
-    """
-    parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
+    """parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Server IP address for VastAI')
     parser.add_argument('--server-port', required=True, help='Server port for VastAI')
     parser.add_argument('--query-file', required=True, help='Path to the VastAI search query file')
@@ -240,7 +242,6 @@ if __name__ == "__main__":
     
 
     # Call the main function with the provided arguments
-    main(args.server_ip, args.server_port, args.query_file)
-    """
+    main(args.server_ip, args.server_port, args.query_file)"""
 
-    main("213.152.162.149", 49042, "search_query.txt")
+    main("213.152.162.79", 49042, "search_query.txt")

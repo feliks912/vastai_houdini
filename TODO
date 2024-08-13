@@ -1,0 +1,17 @@
+Add hip file ignore when downloading
+
+Add:
+    get job
+    pause job
+    check for active instances
+        stop/terminate
+    start instance, wait for instance to get running
+    unpause job
+
+    Because when an instance gets terminated while it's processing a job, the job gets abandoned,
+
+Also add abandoned job re-submission
+
+Remove clients after job end
+
+Upload latest hip file to the cloud automatically.

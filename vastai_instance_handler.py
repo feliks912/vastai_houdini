@@ -167,11 +167,12 @@ def create_vast_ai_instance(compressed_file_name, project_root_folder_name, serv
             response = vast_sdk.create_instance(
                 ID=offer_id,
                 disk=disk_space,  # Use extracted disk space from configurations
-                image="feliks912/houdini20.0_ubuntu20.04:latest",
-                env=f"-e HQUEUE_SERVER_IP={server_ip} -e HQUEUE_SERVER_PORT={server_port} {env_string}",
-                onstart_cmd='env >> /etc/environment;',
+                #image="feliks912/houdini20.0_ubuntu20.04:latest",
+                template_hash="92638380418031bafdca70d2800c6713",
+                env=f"-e HQUEUE_SERVER_IP={server_ip} -e HQUEUE_SERVER_PORT={server_port} -p 5001:5001 {env_string}",
+                onstart_cmd='env >> /etc/environment; bash /scripts/entrypoint.sh;',
                 cancel_unavail=True,
-                ssh=True
+                ssh=False
             )
 
             json_response = json.loads(response[response.rfind('{'):]
