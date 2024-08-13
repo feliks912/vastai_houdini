@@ -30,3 +30,22 @@ if ! tar -c --use-compress-program="pigz -p $CPU_COUNT -9" -f "$OUTPUT_TAR" -T f
 else
     echo "Compression failed."
 fi
+
+rclone copy "$HOUDINI_PROJECTS_PATH/" "$RCLONE_GCLOUD_NAME:$GCLOUD_ROOT_PROJECTS_FOLDER" \
+  --transfers 32 \
+  --checkers 32 \
+  --multi-thread-streams 8 \
+  --buffer-size 256M \
+  --drive-chunk-size 256M \
+  --drive-pacer-min-sleep 10ms \
+  --drive-pacer-burst 200 \
+  --update \
+  --ignore-existing
+
+if [ "$STOP_NO_TERMINATE" = "1" ]; then
+    echo "Files uploaded to cloud. Stopping."
+    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).stop_instance(id=int(os.getenv("INSTANCE_ID")))'
+else
+    echo "Files uploaded to cloud. Terminating."
+    python3 -c 'import os; from vastai import VastAI; VastAI(api_key=os.getenv("VASTAI_API_KEY")).destroy_instance(id=int(os.getenv("INSTANCE_ID")))'
+fi

@@ -45,7 +45,7 @@ RUN bash /scripts/license_installer.sh
 RUN pip3 install vastai
 
 # Copy and set permissions for all scripts at once
-COPY cloud_write_monitor.sh log_monitor.sh compress_files.sh entrypoint.sh /scripts/
+COPY cloud_write_monitor.sh init_client.sh log_monitor.sh compress_files.sh entrypoint.sh /scripts/
 RUN chmod +x /scripts/*.sh
 
 # Download and install Tini, setting it as an entrypoint

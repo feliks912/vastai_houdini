@@ -3,6 +3,7 @@ import xmlrpc.client
 from dotenv import load_dotenv
 import subprocess
 import argparse
+import datetime
 import vastai_instance_handler as vastai_handler
 import os
 import zipfile
@@ -46,9 +47,35 @@ def get_project_folder_name(hip_file_path, base_path):
     relative_path = hip_file_path.replace(base_path, "")
 
     # Split the relative path and get all components except the last one (the file name)
-    project_folder_path = '/'.join(relative_path.split('/')[:-1])
+    project_folder_path = '/'.join(relative_path.split('/')[:-1]) + "/"
 
     return project_folder_path
+
+
+def format_compressed_filename(template, job):
+
+    if template is None:
+        raise ValueError("tar name template undefined.")
+
+    # Extracting values from the job object
+    job_id = job['id']
+    job_name = job['name'].split(' -> ')[1].split(' ')[1].split('/')[-1].split('.')[
+        0]  # Simplistic parsing to extract 'wineglass_01'
+    job_datetime = datetime.datetime.strptime(job['queueTime'].value, "%Y%m%dT%H:%M:%S")
+    job_date = job_datetime.strftime("%Y%m%d")  # Now includes hours, minutes, and seconds
+    job_time = job_datetime.strftime("%H%M%S")
+    submitted_by = job['submittedBy']
+    tags = "_".join(job['tags'])  # Join all tags with underscores
+
+    # Replace placeholders in the template
+    filename = template.replace("%job_id", str(job_id))
+    filename = filename.replace("%hip_name", job_name)
+    filename = filename.replace("%date", job_date)
+    filename = filename.replace("%time", job_time)
+    filename = filename.replace("%submitted_by", submitted_by)
+    filename = filename.replace("%tags", tags)
+
+    return filename
 
 
 def main(server_ip, server_port, configuration_file):
@@ -84,42 +111,46 @@ def main(server_ip, server_port, configuration_file):
                 for child in job_children:
                     print(hq.getJob(child))
 
-                hip_file_path = job['name'].split(' HIP: ')[1].split(' ')[0]  # full path to local hip file
-
                 local_project_path = local_vars.get('LOCAL_PROJECTS_PATH')
+
+                hip_file_path = job['name'].split(' HIP: ')[1].split(' ')[0]  # full path to local hip file
 
                 # Get 'fluids_lesson_start' project folder
                 trailing_project_folder = hip_file_path.replace(local_project_path.rstrip("/") + "/",
-                                                                "")  # /project_folder_name/.../hip_file.hip
+                                                                "")  # project_folder_name/.../hip_file.hip
 
                 rclone_gcloud_name = local_vars.get("RCLONE_GCLOUD_NAME")  # gdrive
-                gcloud_projects_folder = local_vars.get("GCLOUD_PROJECTS_FOLDER")  # /houdini_projects
+                gcloud_projects_folder = local_vars.get("GCLOUD_ROOT_PROJECTS_FOLDER")  # /rclone_mint/houdini_projects
 
                 print("Uploading latest hip file to the cloud")
 
-                upload_folder = '/'.join(trailing_project_folder.split('/')[:-1])  #/project_folder_name/.../
+                child_hip_location = '/' + '/'.join(trailing_project_folder.split('/')[:-1]) + '/'  #removes the hip file /project_folder_name/.../
 
                 # Upload latest hip file from local to gdrive:/houdini_projects/project_folder_name/.../
-                rclone_gcloud_projects_folder = '/'.join(str(gcloud_projects_folder).strip('/').split('/')[1:]) #TODO: Dangit fix this. Assumes rclone is set up to the first layer of folders in gdrive
-                upload_command = f"rclone copy {hip_file_path} {rclone_gcloud_name}:{rclone_gcloud_projects_folder}/{upload_folder}"
+                rclone_upload_hip_to = '/' + str(gcloud_projects_folder).strip('/') + child_hip_location #TODO: Dangit fix this. Assumes rclone is set up to the first layer of folders in gdrive
+
+                upload_command = f"rclone copy {hip_file_path} {rclone_gcloud_name}:{rclone_upload_hip_to}"
 
                 subprocess.run(upload_command, shell=True)
-                print(f"Uploading {hip_file_path} to {rclone_gcloud_name}:{rclone_gcloud_projects_folder}/{upload_folder}")
+                print(f"Uploading {hip_file_path} to {rclone_gcloud_name}:{rclone_gcloud_name}:{rclone_upload_hip_to}")
 
-                project_folder_name = get_project_folder_name(hip_file_path, local_project_path),
+                project_root_folder_name = get_project_folder_name(hip_file_path, local_project_path)
+
+                compressed_file_name = format_compressed_filename(env_vars.get('COMPRESSED_FILE_NAME_TEMPLATE'), job)
 
                 # Call the instance creation function
                 if not safety_flag:
-                    success, contract_id, compressed_file_name = vastai_handler.create_vast_ai_instance(
-                        job,
-                        project_folder_name,  #/project_folder_name
+                    success, contract_id = vastai_handler.create_vast_ai_instance(
+                        compressed_file_name,
+                        project_root_folder_name,  #/project_folder_name
                         server_ip,
                         server_port,
                         configuration_file
                     )
                     if not success:
                         raise Exception("vastai_instance_creator returned with a failed code.")
-
+                    if not contract_id:
+                        raise Exception("create_vast_ai_instance failed in returning a valid contract id")
                     safety_flag = True
 
                 print("The instance is booting, we're waiting for the job to begin...")
@@ -143,11 +174,7 @@ def main(server_ip, server_port, configuration_file):
                     elif parent_status == "succeeded":
                         print("LOLOLOLOL Succeeded.")
 
-                        time.sleep(5)
-
-                        print("Stopping all instances")
-                        vastai_handler.stop_all_instances()
-
+                        """
                         print("intializing upload to cloud")
                         vastai_handler.upload_to_cloud(
                             contract_id,
@@ -155,9 +182,10 @@ def main(server_ip, server_port, configuration_file):
                             local_vars.get("GCLOUD_PROJECTS_FOLDER") + "/" + project_folder_name,
                             # /rclone_mint/houdini_projects/,
                         )  # -> /rclone_mint/houdini_projects/files
+                        """
 
                         print("Scanning for compressed file on gdrive")
-                        command = f"rclone ls {rclone_gcloud_name}: | grep {compressed_file_name}"
+                        command = f"rclone ls {rclone_gcloud_name}:{gcloud_projects_folder} | grep {compressed_file_name}"
                         while True:
                             result = subprocess.run(command, shell=True, text=True, stdout=subprocess.PIPE)
                             if result.stdout.strip():

@@ -11,16 +11,20 @@ CLOUD_SYNC_INIT_WAIT_TIME = 5
 CLOUD_SYNC_NEXT_FILE_WAIT_TIME = 5
 FIRST_JOB_CHECK_TIME = 5
 NEXT_JOB_CHECK_TIME = 5 #
-STOP_NO_TERMINATE = 1 # Instead of terminating an instance on job completion / fail, stop it instead
-COMPRESSED_FILE_NAME_TEMPLATE = "%hip_name_%job_id_%date_%time_%submitted_by.tar.gz"
+STOP_NO_TERMINATE = 0 # Instead of terminating an instance on job completion / fail, stop it instead
+COMPRESSED_FILE_NAME_TEMPLATE = "%hip_name_%job_id_%date_%time_%submitted_by.tar.gz" # always add time, or add hash
 ENV_END # don't remove
 
 # LOCAL VARIABLES
 LOC_BEGIN
+
 LOCAL_PROJECTS_PATH = "/media/feliks/Data/houdini/houdini_projects/20.0/"
-GCLOUD_PROJECTS_FOLDER = "/rclone_mint/houdini_projects/"
+
 RCLONE_GCLOUD_NAME = "gdrive"
+GCLOUD_ROOT_PROJECTS_FOLDER = "/houdini_projects/" # The root of rclone is where it was set up locally, then add folder
+
 RCLONE_CONFIG_LOCATION = "/home/feliks/.config/rclone/rclone.conf"
+
 LOC_END
 
 # File name template info:

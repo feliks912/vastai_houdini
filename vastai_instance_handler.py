@@ -6,7 +6,6 @@ import json
 import argparse
 import re
 import read_configuration as conf
-import datetime
 import base64
 
 
@@ -72,29 +71,6 @@ def upload_to_cloud(contract_id, source_folder, dest_folder):
     except Exception as e:
         print(f"Exception in transfer_to_cloud: {e}")
 
-
-def format_compressed_filename(template, job):
-    # Extracting values from the job object
-    job_id = job['id']
-    job_name = job['name'].split(' -> ')[1].split(' ')[1].split('/')[-1].split('.')[
-        0]  # Simplistic parsing to extract 'wineglass_01'
-    job_datetime = datetime.datetime.strptime(job['queueTime'].value, "%Y%m%dT%H:%M:%S")
-    job_date = job_datetime.strftime("%Y%m%d")  # Now includes hours, minutes, and seconds
-    job_time = job_datetime.strftime("%H%M%S")
-    submitted_by = job['submittedBy']
-    tags = "_".join(job['tags'])  # Join all tags with underscores
-
-    # Replace placeholders in the template
-    filename = template.replace("%job_id", str(job_id))
-    filename = filename.replace("%hip_name", job_name)
-    filename = filename.replace("%date", job_date)
-    filename = filename.replace("%time", job_time)
-    filename = filename.replace("%submitted_by", submitted_by)
-    filename = filename.replace("%tags", tags)
-
-    return filename
-
-
 def get_id_for_drive(output):
     lines = output.strip().split('\n')
     # Start from line 2 to skip headers
@@ -127,7 +103,7 @@ def stop_all_instances():
         print(f"Exception in stop_all_instances: {e}")
 
 
-def create_vast_ai_instance(job, project_folder_name, server_ip, server_port, configuration_file_path):
+def create_vast_ai_instance(compressed_file_name, project_root_folder_name, server_ip, server_port, configuration_file_path):
     """Create a VastAI instance based on the provided search query file."""
     # Load API key from environment variable
     api_key = os.getenv('VASTAI_API_KEY')
@@ -150,31 +126,29 @@ def create_vast_ai_instance(job, project_folder_name, server_ip, server_port, co
     print(f"Search configuration string:\n{search_query}")
 
     try:
-        # Generate environment string dynamically
-        compressed_file_name_template = env_vars.pop('COMPRESSED_FILE_NAME_TEMPLATE',
-                                                     None)  # Remove this as it needs special handling
+        env_vars.pop('COMPRESSED_FILE_NAME_TEMPLATE')
 
-        if compressed_file_name_template is None:
-            raise ValueError("No compressed file name template defined.")
-        # Check if the template exists, and generate the filename accordingly
-        if compressed_file_name_template:
-            compressed_file_name = format_compressed_filename(compressed_file_name_template, job)
-        else:
-            compressed_file_name = "new_project_files.tar.gz"
-        env_vars['COMPRESSED_FILE_NAME'] = compressed_file_name  # Add this dynamically created filename to env_vars
+        container_vars = env_vars
+
+        container_vars['PROJECT_FOLDER_NAME'] = project_root_folder_name
+        container_vars['HOUDINI_PROJECTS_PATH'] = local_variables.get('LOCAL_PROJECTS_PATH')
+        container_vars['COMPRESSED_FILE_NAME'] = compressed_file_name
+        container_vars['RCLONE_GCLOUD_NAME'] = local_variables.get('RCLONE_GCLOUD_NAME')
+        container_vars['GCLOUD_ROOT_PROJECTS_FOLDER'] = local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER')
+        container_vars['VASTAI_API_KEY'] = api_key
+
+        rclone_conf_file = str(local_variables.get("RCLONE_CONFIG_LOCATION"))
+        with open(rclone_conf_file, 'r') as file:
+            container_vars['RCLONE_BASE64_ENCODED'] = base64.b64encode(file.read().encode('ascii')).decode('ascii')
+
         # Generate full environment string for Docker
-        env_string = ' '.join(f"-e {key}={value}" for key, value in env_vars.items())
-
-        with open(local_variables.get("RCLONE_CONFIG_LOCATION"), 'r') as file:
-            base64_rconfig_conf = base64.b64encode(file.read().encode('ascii')).decode('ascii')
-
-        env_string += f" -e RCLONE_BASE64_ENCRYPTED={base64_rconfig_conf}"
+        env_string = ' '.join(f"-e {key}={value}" for key, value in container_vars.items())
 
         print("Environment String:\n", env_string)
 
-    except ValueError as e:
-        print(e)
-        return 1
+    except Exception as e:
+        print(f"Exception in creating env variables in vastai instance handler: {e}")
+        raise Exception
 
     try:
         search_offers = vast_sdk.search_offers(
@@ -209,47 +183,47 @@ def create_vast_ai_instance(job, project_folder_name, server_ip, server_port, co
 
                 instance_id = json_response['new_contract']
 
-                while str(instance_id) not in vast_sdk.show_instance(id=instance_id):
-                    time.sleep(1)
+                if False: #TODO: Add option to use this instead of container's rclone for stopped instances
+                    while str(instance_id) not in vast_sdk.show_instance(id=instance_id):
+                        time.sleep(1)
 
-                while not [line for line in vast_sdk.show_instance(id=instance_id).splitlines() if "running" in line]:
-                    time.sleep(1)
+                    while not [line for line in vast_sdk.show_instance(id=instance_id).splitlines() if "running" in line]:
+                        time.sleep(1)
 
-                source = "/" + str(local_variables.get('GCLOUD_PROJECTS_FOLDER')).strip('/') + "/" + str(
-                    project_folder_name).strip('/')
-                destination = "/" + str(local_variables.get("LOCAL_PROJECTS_PATH")).strip('/') + "/" + str(
-                    project_folder_name).strip('/')
-                instance_id = str(json_response['new_contract'])
-                connection = get_id_for_drive(vast_sdk.show_connections())
+                    source = "/" + str(local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER')).strip('/') + "/" + str(
+                        project_folder_name).strip('/')
+                    destination = "/" + str(local_variables.get("LOCAL_PROJECTS_PATH")).strip('/') + "/" + str(
+                        project_folder_name).strip('/')
+                    instance_id = str(json_response['new_contract'])
+                    connection = get_id_for_drive(vast_sdk.show_connections())
 
-                # Download project from the cloud
-                try:
-                    vast_sdk.cloud_copy(
-                        src=source,
-                        dst=destination,
-                        instance=instance_id,
-                        connection=connection,
-                        transfer="Cloud To Instance"
-                    )
-                    print("Cloud to Instance copy commenced.")
+                    # Download project from the cloud
+                    try:
+                        vast_sdk.cloud_copy(
+                            src=source,
+                            dst=destination,
+                            instance=instance_id,
+                            connection=connection,
+                            transfer="Cloud To Instance"
+                        )
+                        print("Cloud to Instance copy commenced.")
 
-                except Exception as e:
-                    print(f"Copy operation Cloud to Instance failed with exception: {e}")
+                    except Exception as e:
+                        print(f"Copy operation Cloud to Instance failed with exception: {e}")
 
                 print("Instance created successfully with contract ID:", json_response['new_contract'])
                 return (
                     True,
-                    json_response['new_contract'],
-                    env_vars.get("COMPRESSED_FILE_NAME")
+                    json_response['new_contract']
                 )
             else:
-                return False, None, None
+                return False, None
         else:
             print("No instances offered for those requirements")
-            return False, None, None
+            return False, None
     except Exception as e:
         print(f"An error occurred in vastai instance handler: {e}")
-        return False, None, None
+        return False, None
 
 
 if __name__ == "__main__":

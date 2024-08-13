@@ -75,7 +75,7 @@ echo "Public IP: $PUBLIC_IP, Port: $SERVER_PORT"
 # Function to perform tasks as the original user
 source /home/feliks/miniconda3/bin/activate base
 
-echo "This is the key: "$VASTAI_API_KEY""
+echo "This is the key: $VASTAI_API_KEY"
 
     # Run the Python script as the original user
 #python3 /opt/houdini_scripts/hqserver_handler.py --server-ip "$PUBLIC_IP" --server-port "$SERVER_PORT" --query-file "$QUERY_PATH"
