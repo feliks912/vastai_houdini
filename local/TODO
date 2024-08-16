@@ -1,0 +1,52 @@
+TODO List
+
+    Code Organization and Repository Management
+        Organize code and push to repository
+
+    Docker Integration
+        Get DinD (Docker-in-Docker) image
+        Pull repository
+        Pull and install dependencies
+        Build Docker image
+        Tag Docker image
+        Push Docker image
+
+    Process Management
+        Add IDs to a list
+        Call cleanup function to terminate those processes
+
+    Port Forwarding
+        Add port forwarding
+            Port 49042 is forwarded on local machine
+            Port 49043 needs to be forwarded
+
+    Backblaze Integration
+        Convert to Backblaze
+
+    NetData Integration
+        Stop/remove from NetData on stop/terminate
+
+    File Handling
+        Add HIP file ignore functionality when downloading
+
+    Job Management
+        Add job management functions:
+            Get job
+            Pause job
+            Check for active instances:
+                Stop/terminate instances
+            Start instance and wait for it to be running
+            Unpause job
+        Handle job abandonment:
+            Resubmit abandoned jobs
+
+    Client Management
+        Remove clients after job completion
+
+    Cloud Integration
+        Upload the latest HIP file to the cloud automatically
+
+    Instance Handling
+        Handle cases where VastAI instance creator offers an instance, but it gets rented by someone else resulting in a 404 and exception
+        Test job status for 'runnable':
+            If 'running', ensure the job is processing correctly or handle if it has issues

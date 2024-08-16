@@ -12,7 +12,7 @@ echo "houdini project folder: $HOUDINI_PROJECT_FOLDER"
 mkdir -p "$HOUDINI_PROJECT_FOLDER"
 
 function init_client(){
-	rm /scripts/inotify.log
+	rm /tmp/inotify.log
 
 	inotifywait -m -r -e create -e modify --timefmt '%d-%m-%Y %H:%M:%S' --format '%T %w%f %e' "$HOUDINI_PROJECT_FOLDER" | while read -r DATE TIME FILE EVENT
 	do
@@ -30,11 +30,11 @@ function init_client(){
 	    fi
 	
 	    # Log all other events
-	    echo "$DATE $TIME $FILE $EVENT" >> /scripts/inotify.log
+	    echo "$DATE $TIME $FILE $EVENT" >> /tmp/inotify.log
 	done &
 
 	/houdini/hqueue_client/hqclientd force-reload
-	bash /scripts/log_monitor.sh &
+	bash /repo/docker/log_monitor.sh &
 }
 
 # Format for timestamp

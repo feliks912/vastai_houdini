@@ -1,4 +1,4 @@
-docker/*.json
-AirVPN*
+local/*.json
+local/*.ovpn
 docker/houdini_installer/
-*backblaze*
+cryptkey

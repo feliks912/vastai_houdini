@@ -21,7 +21,7 @@ function destroy_instance(){
 }
 
 function prepare_container_shutdown(){
-	bash /scripts/compress_files.sh
+	bash /repo/docker/compress_files.sh
 	destroy_instance
 }
 

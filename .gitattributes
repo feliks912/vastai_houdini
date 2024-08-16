@@ -1,0 +1,7 @@
+.gitattributes !filter !diff
+
+docker/license* filter=git-crypt diff=git-crypt
+local/AirVPN* filter=git-crypt diff=git-crypt
+local/backblaze* filter=git-crypt diff=git-crypt
+docker/rclone.conf filter=git-crypt diff=git-crypt
+docker/.env filter=git-crypt diff=git-crypt

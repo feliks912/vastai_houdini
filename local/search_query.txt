@@ -1,0 +1,54 @@
+# CONTAINER CONFIGURATION #
+CONT_BEGIN # don't remove
+dph <= 1
+gpu_name in ['RTX_4090']
+#datacenter = True
+#compute_cap >= 120
+cpu_arch = amd64
+cpu_cores_effective >= 16
+cpu_ghz >= 3
+cpu_ram >= 16
+direct_port_count >= 5
+disk_space >= 15 # Must be here
+disk_bw >= 300
+inet_down > 300
+inet_up > 300
+inet_down_cost <= 0.004
+inet_up_cost <= 0.004
+#pci_gen >= 4
+#reliability > 0.95
+rentable = True
+duration >= 1
+external = True
+verified = True
+geolocation in ['BE','EL','LT','PT','BG','ES','LU','RO','CZ','FR','HU','SI','DK','HR','MT','SK','DE','IT','NL','FI','EE','CY','AT','SE','IE','LV','PL','IS','NO','LI','CH','BA','ME','MD','MK','GE','AL','RS','TR','UA','XK']
+CONT_END # don't remove
+
+# CONTAINER ENVIRONMENT VARIABLES #
+ENV_BEGIN # don't remove
+NO_JOB_KILL = 1
+FIRST_JOB_CHECK_TIME = 15
+NEXT_JOB_CHECK_TIME = 5
+STOP_NO_TERMINATE = 0
+COMPRESSED_FILE_NAME_TEMPLATE = "%hip_name_%job_id_%date_%time_%submitted_by.tar.gz"
+ENV_END # don't remove
+
+# LOCAL VARIABLES
+LOC_BEGIN
+
+LOCAL_PROJECTS_PATH = "/media/feliks/Data/houdini/houdini_projects/20.0/"
+
+RCLONE_GCLOUD_NAME = "gdrive"
+GCLOUD_ROOT_PROJECTS_FOLDER = "/houdini_projects/" # The root of rclone is where it was set up locally, then add folder
+
+RCLONE_CONFIG_LOCATION = "/home/feliks/.config/rclone/rclone.conf"
+
+LOC_END
+
+# File name template info:
+%job_id: Replaced with the unique identifier of the job. This is a numeric value.
+%hip_name: Extracted from the job's name attribute. This typically includes a descriptive name or identifier for the job.
+%date: Represents the date when the job was queued. It is formatted as YYYYMMDD (Year, Month, Day).
+%time: the time when the job was queued. Formatted as HHMMSS (Hour, Minute, Second)
+%submitted_by: The username of the individual who submitted the job.
+%tags: A concatenation of all tags associated with the job, joined by underscores. Tags are used to categorize or highlight specific attributes of the job.
