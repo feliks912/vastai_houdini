@@ -41,9 +41,14 @@ RUN bash /tmp/houdini_installer/houdini.install --accept-EULA 2021-10-13 \
     --auto-install \
     --make-dir /houdini/houdini20.0
 
+COPY ./license_installer.sh /scripts/license_installer.sh
+RUN chmod +x /scripts/license_installer.sh
+RUN bash /scripts/license_installer.sh
+
 FROM base
 COPY --from=houdini-installer /houdini /houdini
 COPY --from=houdini-installer /usr/lib/sesi /usr/lib/sesi
+COPY --from=houdini-installer /etc/init.d/sesinetd /etc/init.d/sesinetd
 
 RUN wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && sh /tmp/netdata-kickstart.sh \
 --no-updates --stable-channel --disable-telemetry --non-interactive && rm -rf /var/lib/apt/lists/*
