@@ -103,7 +103,7 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                 print("Uploading latest HIP file to the cloud")
 
                 rclone_refresh_command = f"rclone config reconnect {rclone_gcloud_name}:"
-                subprocess.run(rclone_refresh_command, shell=True)
+                #subprocess.run(rclone_refresh_command, shell=True)
 
                 child_hip_location = os.path.join('/', *trailing_project_folder.split('/')[:-1])
                 rclone_upload_hip_to = os.path.join(gcloud_projects_folder.strip('/'), child_hip_location)
