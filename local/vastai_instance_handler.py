@@ -125,13 +125,22 @@ def create_vast_ai_instance(
         env_vars.pop('COMPRESSED_FILE_NAME_TEMPLATE', None)
         container_vars = env_vars.copy()
 
+        git_crypt_key_path = env_vars.pop('GIT_CRYPT_KEY_PATH')
+        with open(git_crypt_key_path, 'rb') as key:
+
+            binary_key = key.read()
+
+            encoded_key = base64.b64encode(binary_key)
+            encoded_key_string = encoded_key.decode('utf-8')
+
+            container_vars.update({'GIT_CRYPT_KEY': encoded_key_string})
+
         container_vars.update({
             'PROJECT_FOLDER_NAME': project_root_folder_name,
             'HOUDINI_PROJECTS_PATH': local_variables.get('LOCAL_PROJECTS_PATH'),
             'COMPRESSED_FILE_NAME': compressed_file_name,
             'RCLONE_GCLOUD_NAME': local_variables.get('RCLONE_GCLOUD_NAME'),
             'GCLOUD_ROOT_PROJECTS_FOLDER': local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER'),
-            'VASTAI_API_KEY': api_key
         })
 
         env_string = ' '.join(f"-e {key}={value}" for key, value in container_vars.items())

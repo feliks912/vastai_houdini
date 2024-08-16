@@ -2,6 +2,22 @@
 
 # Decrypt the github files using crypt key
 
+cd "/repo" || echo "Can't cd to /repo"
+
+if echo "$GIT_CRYPT_KEY" | base64 --decode > /tmp/keyfile; then
+    if git-crypt unlock /tmp/keyfile; then
+        echo "Unlock successful."
+        rm /tmp/keyfile
+    else
+        echo "Unlock failed."
+        rm /tmp/keyfile
+        exit 1
+    fi
+else
+    echo "Failed to decode key."
+    exit 1
+fi
+
 bash /repo/docker/netdata_install.sh &
 
 bash /repo/docker/license_installer.sh &

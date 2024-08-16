@@ -11,6 +11,8 @@ function destroy_instance(){
 
   container_id=${VAST_CONTAINERLABEL//[!0-9]/}
 
+  set -a; source /repo/docker/.env; set +a
+
 	if [ "$STOP_NO_TERMINATE" = "1" ]; then
     echo "Files uploaded to cloud. Stopping."
     vastai stop instance "$container_id" --retry 5 --api-key "$VASTAI_API_KEY"

@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 \
     libxi6 libxkbcommon-x11-0 libxkbcommon0 libxrandr2 libxrender1 libxss1 \
     libxt6 libxtst6 libzstd1 zlib1g \
-    inotify-tools micro pigz rclone ca-certificates openssl wget git tar git-crypt\
+    inotify-tools micro pigz rclone ca-certificates openssl wget git tar git-crypt aria2\
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
@@ -18,9 +18,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Stage 2: Houdini installation
 FROM base AS houdini-installer
 
-COPY ./tmp/houdini_installer /houdini_installer
+RUN aria2c -x 4 -s 4 -d /tmp -o houdini20_precracked.tar.gz \
+"https://huggingface.co/feliks912/Houdini_cracked_lin/resolve/main/houdini-py39-20.0.547-linux_x86_64_gcc11.2_PRECRACKED.tar.gz?download=true"
 
-RUN bash /houdini_installer/houdini.install --accept-EULA 2021-10-13 \
+RUN mkdir -p /tmp/houdini_installer
+RUN tar -xzf /tmp/houdini20_precracked.tar.gz -C /tmp/houdini_installer
+
+RUN bash /tmp/houdini_installer/houdini.install --accept-EULA 2021-10-13 \
     --install-houdini --install-license \
     --no-install-engine-maya \
     --no-install-engine-unity \
@@ -46,6 +50,7 @@ ENV PATH="${PATH}:/houdini/houdini20.0/bin:/houdini/hqueue_client/bin"
 RUN pip3 install vastai
 
 COPY entrypoint.sh /scripts/entrypoint.sh
+RUN chmod +x /scripts/**
 
 # Download and install Tini, setting it as an entrypoint
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini

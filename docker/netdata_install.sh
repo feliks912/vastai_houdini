@@ -7,6 +7,8 @@ CONFIG_FILE="/etc/netdata/stream.conf"
 
 cp /usr/lib/netdata/conf.d/stream.conf $CONFIG_FILE
 
+set -a; source /repo/docker/.env; set +a
+
 # Perform the replacements
 sed -i "0,/destination =/s//destination =$NETDATA_SERVER_IP:$NETDATA_SERVER_PORT/" "$CONFIG_FILE"
 sed -i "0,/#ssl skip certificate verification = yes/s//ssl skip certificate verification = yes/" "$CONFIG_FILE"
