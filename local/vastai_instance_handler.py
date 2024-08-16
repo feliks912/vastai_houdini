@@ -177,7 +177,7 @@ def create_vast_ai_instance(
                 response = vast_sdk.create_instance(
                     ID=offer_id,
                     disk=disk_space,
-                    image="feliks912/houdini20.0_ubuntu20.04:latest",
+                    image="feliks912/houdini20.0_cuda12.2:latest",
                     env=f"-e NETDATA_SERVER_IP={netdata_server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
                         f"-e HQUEUE_SERVER_IP={hqueue_server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
                         f"-p 5001:5001 {env_string}",
