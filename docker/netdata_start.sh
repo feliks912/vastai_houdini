@@ -1,8 +1,5 @@
 #!/bin/bash
 
-wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && sh /tmp/netdata-kickstart.sh \
---no-updates --stable-channel --disable-telemetry --non-interactive
-
 CONFIG_FILE="/etc/netdata/stream.conf"
 
 cp /usr/lib/netdata/conf.d/stream.conf $CONFIG_FILE

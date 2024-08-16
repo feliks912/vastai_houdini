@@ -181,7 +181,7 @@ def create_vast_ai_instance(
                     env=f"-e NETDATA_SERVER_IP={netdata_server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
                         f"-e HQUEUE_SERVER_IP={hqueue_server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
                         f"-p 5001:5001 {env_string}",
-                    onstart_cmd='env >> /etc/environment; wget -O - https://nopaste.net/init_netdata_v2 | bash;',
+                    onstart_cmd='env >> /etc/environment; bash /repo/docker/entrypoint.sh;',
                     cancel_unavail=True,
                 )
             except Exception as e:

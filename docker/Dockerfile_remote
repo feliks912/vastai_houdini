@@ -45,12 +45,15 @@ FROM base
 COPY --from=houdini-installer /houdini /houdini
 COPY --from=houdini-installer /usr/lib/sesi /usr/lib/sesi
 
+RUN wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && sh /tmp/netdata-kickstart.sh \
+--no-updates --stable-channel --disable-telemetry --non-interactive && rm -rf /var/lib/apt/lists/*
+
 ENV PATH="${PATH}:/houdini/houdini20.0/bin:/houdini/hqueue_client/bin"
 
 RUN pip3 install vastai
 
-COPY entrypoint.sh /scripts/entrypoint.sh
-RUN chmod +x /scripts/**
+COPY ./entrypoint.sh /scripts/entrypoint.sh
+RUN chmod +x /scripts/*
 
 # Download and install Tini, setting it as an entrypoint
 ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini

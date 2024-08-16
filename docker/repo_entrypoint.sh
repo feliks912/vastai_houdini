@@ -2,7 +2,22 @@
 
 # Decrypt the github files using crypt key
 
-cd "/repo" || echo "Can't cd to /repo"
+cd "/repo" || { echo "Can't cd to /repo"; exit 1; }
+
+if [ -z "$(git status --porcelain)" ]; then
+    echo "Repository is clean. Proceeding..."
+else
+    echo "Repository is not clean. Attempting to clean..."
+    git reset --hard
+    git clean -fdx
+    if [ -z "$(git status --porcelain)" ]; then
+        echo "Cleanup successful. Proceeding..."
+    else
+        echo "Failed to clean the repository. Exiting..."
+        exit 1
+    fi
+fi
+
 
 if echo "$GIT_CRYPT_KEY" | base64 --decode > /tmp/keyfile; then
     if git-crypt unlock /tmp/keyfile; then
@@ -18,7 +33,7 @@ else
     exit 1
 fi
 
-bash /repo/docker/netdata_install.sh &
+bash /repo/docker/netdata_start.sh &
 
 bash /repo/docker/license_installer.sh &
 
