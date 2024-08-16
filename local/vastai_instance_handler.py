@@ -183,6 +183,7 @@ def create_vast_ai_instance(
                         f"-p 5001:5001 {env_string}",
                     onstart_cmd='env >> /etc/environment;',
                     cancel_unavail=True,
+                    ssh=True
                 )
             except Exception as e:
                 print(f"Exception when calling create instance: {e}")
