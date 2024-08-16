@@ -1,4 +1,2 @@
-local/*.json
-local/*.ovpn
 docker/houdini_installer/
 cryptkey
