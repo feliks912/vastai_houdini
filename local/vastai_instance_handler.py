@@ -122,9 +122,10 @@ def create_vast_ai_instance(
 
     try:
         env_vars.pop('COMPRESSED_FILE_NAME_TEMPLATE', None)
+        git_crypt_key_path = env_vars.pop('GIT_CRYPT_KEY_PATH', None)
+
         container_vars = env_vars.copy()
 
-        git_crypt_key_path = env_vars.pop('GIT_CRYPT_KEY_PATH')
         with open(git_crypt_key_path, 'rb') as key:
 
             binary_key = key.read()
