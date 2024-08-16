@@ -31,79 +31,54 @@ HQSERVER_INI_PATH="$2"
 HQSERVER_PORT="$3"
 NETDATA_PORT="$4"
 QUERY_PATH="$5"
+VPN_SERVER="$6"
 
 echo "Script is running as: $(whoami), which should be root."
 
-# Start the HQ server process
-hqserver_nsname="hqserver"
-hqserver_script="vopono_scripts/hqserver_start.sh $HQSERVER_PORT $HQSERVER_INI_PATH"
 
-echo "Starting HQ server with namespace '$hqserver_nsname' on port $HQSERVER_PORT using script $hqserver_script..."
 
-sudo ./vopono_exec.sh "$hqserver_nsname" "$HQSERVER_PORT" "$hqserver_script"
+
+# Start the Netdata process
+nsname="hou_vast"
+ns_script="start_servers.sh $HQSERVER_PORT $HQSERVER_INI_PATH $NETDATA_PORT"
+
+echo "Starting servers with namespace '$nsname' on port $HQSERVER_PORT and $NETDATA_PORT, using script $ns_script..."
+bash ./vopono_exec.sh "$USER" "$VPN_SERVER" "$nsname" "$HQSERVER_PORT" "$NETDATA_PORT" "$ns_script"
+
 return_code=$?
 
 if [[ $return_code -eq 1 ]]; then
-    echo "Error: HQ server start failed with return code $return_code."
+    echo "Error: servers start failed with return code $return_code."
     exit 1
 fi
 
 pid=$return_code  # Only correct if return_code was meant to be a PID, adjust as necessary
 pids+=("$pid")
+
 # Handle script exit or interruption
 trap 'echo "Script exited or interrupted. Stopping Vopono namespaces."; kill_processes "${pids[@]}"; echo "Vopono processes killed."' EXIT SIGINT SIGTERM
 
 
 # :=================================================D #
 
-# Start the Netdata process
-netdata_nsname="netdata"
-netdata_script="vopono_scripts/netdata_start.sh $NETDATA_PORT"
-
-echo "Starting Netdata with namespace '$netdata_nsname' on port $NETDATA_PORT using script $netdata_script..."
-sudo ./vopono_exec.sh "$netdata_nsname" "$NETDATA_PORT" "$netdata_script"
-return_code=$?
-
-if [[ $return_code -eq 1 ]]; then
-    echo "Error: Netdata start failed with return code $return_code."
-    exit 1
-fi
-
-pid=$return_code  # Only correct if return_code was meant to be a PID, adjust as necessary
-pids+=("$pid")
-
-# Handle script exit or interruption
-trap 'echo "Script exited or interrupted. Stopping Vopono namespaces."; kill_processes "${pids[@]}"; echo "Vopono processes killed."' EXIT SIGINT SIGTERM
-
 
 
 
 # Retrieve and display IP addresses and ports
-hqserver_ip_port=$(cat /tmp/${hqserver_nsname}_ns_ip_port.log)
-hqserver_ip=$(echo "$hqserver_ip_port" | awk '{print $2}')
-hqserver_port=$(echo "$hqserver_ip_port" | awk '{print $3}')
-echo "HQ server Public IP: $hqserver_ip, HQ server Port: $hqserver_port"
+server_ip=$(cat /tmp/${nsname}_ns_ip.log | awk '{print $2}')
+echo "Public server IP: $server_ip"
 
 echo "Checking connection..."
-if nc -zv "$hqserver_ip" "$hqserver_port"; then
-    echo "Success: $hqserver_ip is reachable on port $hqserver_port."
+if nc -zv "$server_ip" "$HQSERVER_PORT"; then
+    echo "Success: $server_ip is reachable on port $HQSERVER_PORT."
+    if nc -zv "$server_ip" "$NETDATA_PORT"; then
+      echo "Success: $server_ip is reachable on port $NETDATA_PORT."
+    else
+      echo "Error: $server_ip is not reachable on port $NETDATA_PORT."
+      exit 2
+    fi
 else
-    echo "Error: $hqserver_ip is not reachable on port $hqserver_port."
-    exit 2
-fi
-
-
-
-netdata_ip_port=$(cat /tmp/${netdata_nsname}_ns_ip_port.log)
-netdata_ip=$(echo "$netdata_ip_port" | awk '{print $2}')
-netdata_port=$(echo "$netdata_ip_port" | awk '{print $3}')
-echo "Netdata Public IP: $netdata_ip, Netdata Port: $netdata_port"
-
-echo "Checking connection..."
-if nc -zv "$netdata_ip" "$netdata_port"; then
-    echo "Success: $netdata_ip is reachable on port $netdata_port."
-else
-    echo "Error: $netdata_ip is not reachable on port $netdata_port."
+    echo "Error: $server_ip is not reachable on port $HQSERVER_PORT."
     exit 2
 fi
 
@@ -133,10 +108,9 @@ done
 # Run the Python script as the original user
 echo "Running Python script as user '$USER'."
 su - "$USER" -c "python3 $(pwd)/hqserver_handler.py \
-      --netdata-ip $netdata_ip \
+      --server-ip $server_ip \
+      --hqserver-port $HQSERVER_PORT \
       --netdata-port $NETDATA_PORT \
-      --hqserver-ip $hqserver_ip \
-      --hqserver-port $hqserver_port \
       --query-file $QUERY_PATH"
 
 # Wait for all background jobs to finish

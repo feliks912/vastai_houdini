@@ -2,24 +2,30 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 <NAME> <SERVER_PORT> <SCRIPT_PATH>"
+    echo "Usage: $0 <USER> <SERVER_NAME> <NS_NAME> <HQSERVER_PORT> <NETDATA_PORT> <SCRIPT_PATH>"
     echo
     echo "Arguments:"
+    echo "  USER         The name of the user which has vopono ovpn files"
+    echo "  SERVER_NAME  The server the vpn will attempt to use."
     echo "  NAME         The base name for the network namespace and log file."
-    echo "  SERVER_PORT  The port number to be used by the server."
+    echo "  HQSERVER_PORT  The port number to be used by hqserver."
+    echo "  NETDATA_PORT   The port number used by netdata."
     echo "  SCRIPT_PATH  Path to the custom script to run within Vopono."
     exit 1
 }
 
 # Check if the correct number of arguments is passed
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 6 ]; then
     usage >&2
 fi
 
 # Assign positional parameters to variables
-name="$1"
-server_port="$2"
-script_path="$3"
+user="$1"
+VPN_SERVER_NAME="$2"
+name="$3"
+hqserver_port="$4"
+netdata_port="$5"
+script_path="$6"
 
 # Define network namespace name and log file path
 netns_name="${name}_ns"
@@ -47,12 +53,14 @@ if ip link show | grep -q "${netns_name}_d"; then
   fi
 fi
 
-echo "Starting Vopono with custom command in network namespace '$netns_name'..." >&2
+echo "Starting Vopono with custom command in network namespace '$netns_name'... on server '$VPN_SERVER_NAME'" >&2
+
 # Start Vopono with the given custom command and log to the file
   #since this runs in as a background task, vopono job id will immediately get the
-vopono exec --custom ./AirVPN_Europe_UDP-443-v2.ovpn --custom-netns-name "$netns_name" \
-    --protocol openvpn --keep-alive -f "$server_port" \
-    "sudo bash $script_path" 2>&1 | tee "$log_file" > /dev/null &
+vopono exec --custom-netns-name "$netns_name" \
+    --protocol openvpn --custom "/home/$user/.config/vopono/air/openvpn/${VPN_SERVER_NAME}.ovpn" \
+    --keep-alive -f "$hqserver_port" -f "$netdata_port" \
+    "sudo bash $script_path" 2>&1 | tee "$log_file" &
 
 vopono_job_id=$!
 
@@ -79,7 +87,6 @@ checkjob(){
 if ! tail -f "$log_file" | while read -r LINE; do
     checkjob $vopono_job_id
 
-    echo "$LINE" >&2
     if [[ "$LINE" == *"Keep-alive flag active"* ]]; then
         echo "Keep-alive flag detected, exiting tail loop." >&2
         pkill -P $$ tail
@@ -97,7 +104,7 @@ echo "Exited tail loop" >&2
 
 # Verify network namespace status
 echo "Checking network namespace status with 'ip netns list'" >&2
-sudo ip netns list >&2
+ip netns list >&2
 
 # Poll for the public IP address
 while true; do
@@ -105,11 +112,11 @@ while true; do
     checkjob $vopono_job_id
 
     echo "Attempting to fetch public IP address..." >&2
-    public_ip=$(sudo ip netns exec "$netns_name" curl -s ifconfig.me)
+    public_ip=$(ip netns exec "$netns_name" curl -s ifconfig.me)
     echo "Attempted to fetch public IP address!" >&2
     if [[ -n "$public_ip" ]]; then
         echo "Public IP found: $public_ip" >&2
-        echo "$netns_name $public_ip $server_port" > "/tmp/${netns_name}_ip_port.log"
+        echo "$netns_name $public_ip" > "/tmp/${netns_name}_ip.log"
         break
     else
         echo "No public IP retrieved, trying again..." >&2

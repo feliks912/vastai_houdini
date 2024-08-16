@@ -64,7 +64,7 @@ def format_compressed_filename(template, job):
         print(f"Exception in format compressed filename: {e}")
 
 
-def main(hqserver_ip, hqserver_port, netdata_ip, netdata_port, configuration_file):
+def main(server_ip, hqserver_port, netdata_port, configuration_file):
     """Main function to monitor jobs, upload files, and manage VastAI instances."""
     env_path = '/opt/houdini_scripts/.env'
     load_dotenv(dotenv_path=env_path)
@@ -74,9 +74,9 @@ def main(hqserver_ip, hqserver_port, netdata_ip, netdata_port, configuration_fil
         raise Exception("VASTAI_API_KEY not found in the .env file. Please ensure it is defined.")
 
     print(f"The key is {api_key}")
-    print(f"Python script server IP: {hqserver_ip}, server port: {hqserver_port}")
+    print(f"Python script server IP: {server_ip}, server port: {hqserver_port}")
 
-    hq = xmlrpc.client.ServerProxy(f"http://{hqserver_ip}:{hqserver_port}")
+    hq = xmlrpc.client.ServerProxy(f"http://{server_ip}:{hqserver_port}")
 
     safety_flag = False
 
@@ -116,10 +116,9 @@ def main(hqserver_ip, hqserver_port, netdata_ip, netdata_port, configuration_fil
                     success, contract_id = vastai_handler.create_vast_ai_instance(
                         compressed_file_name,
                         project_root_folder_name,
-                        netdata_ip,
-                        netdata_port,
-                        hqserver_ip,
+                        server_ip,
                         hqserver_port,
+                        netdata_port,
                         configuration_file
                     )
                     if not success:
@@ -225,17 +224,15 @@ def main(hqserver_ip, hqserver_port, netdata_ip, netdata_port, configuration_fil
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
-    parser.add_argument('--hqserver-ip', required=True, help='Server IP address for HQueue')
+    parser.add_argument('--server-ip', required=True, help='Public server IP address')
     parser.add_argument('--hqserver-port', required=True, help='Server port for HQueue')
-    parser.add_argument('--netdata-ip', required=True, help='IP address of NetData server')
     parser.add_argument('--netdata-port', required=True, help='Port of NetData server')
     parser.add_argument('--query-file', required=True, help='Path to the VastAI search query file')
     args = parser.parse_args()
 
     main(
-        args.hqserver_ip,
+        args.server_ip,
         args.hqserver_port,
-        args.netdata_ip,
         args.netdata_port,
         args.query_file
     )

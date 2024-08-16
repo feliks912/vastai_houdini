@@ -91,10 +91,9 @@ def get_id_for_drive(output):
 def create_vast_ai_instance(
         compressed_file_name: str,
         project_root_folder_name: str,
-        netdata_server_ip: str,
-        netdata_server_port: str,
-        hqueue_server_ip: str,
+        server_ip: str,
         hqueue_server_port: str,
+        netdata_server_port: str,
         configuration_file_path: str):
     """Create a VastAI instance based on the provided search query file."""
     api_key = os.getenv('VASTAI_API_KEY')
@@ -178,10 +177,10 @@ def create_vast_ai_instance(
                     ID=offer_id,
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
-                    env=f"-e NETDATA_SERVER_IP={netdata_server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
-                        f"-e HQUEUE_SERVER_IP={hqueue_server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
+                    env=f"-e NETDATA_SERVER_IP={server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
+                        f"-e HQUEUE_SERVER_IP={server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
                         f"-p 5001:5001 {env_string}",
-                    onstart_cmd='env >> /etc/environment; bash /repo/docker/entrypoint.sh;',
+                    onstart_cmd='env >> /etc/environment;',
                     cancel_unavail=True,
                 )
             except Exception as e:
@@ -217,10 +216,9 @@ if __name__ == "__main__":
     # Argument parsing
     parser = argparse.ArgumentParser(description='VastAI Instance Handler Script')
     parser.add_argument('--project-root-folder-name', required=True, help='Project root folder name')
-    parser.add_argument('--netdata-server-ip', required=True, help='Netdata server IP address')
-    parser.add_argument('--netdata-server-port', required=True, help='Netdata server port')
-    parser.add_argument('--hqueue-server-ip', required=True, help='HQueue server IP address')
+    parser.add_argument('--server-ip', required=True, help='Netdata server IP address')
     parser.add_argument('--hqueue-server-port', required=True, help='HQueue server port')
+    parser.add_argument('--netdata-server-port', required=True, help='Netdata server port')
     parser.add_argument('--query-file', required=True, help='Path to the search query file')
     parser.add_argument('--compressed-file-name', required=True, help='Name of the compressed file')
 
@@ -229,10 +227,9 @@ if __name__ == "__main__":
     # Call the function with the provided arguments
     create_vast_ai_instance(
         project_root_folder_name=args.project_root_folder_name,
-        netdata_server_ip=args.netdata_server_ip,
-        netdata_server_port=args.netdata_server_port,
-        hqueue_server_ip=args.hqueue_server_ip,
+        server_ip=args.server_ip,
         hqueue_server_port=args.hqueue_server_port,
+        netdata_server_port=args.netdata_server_port,
         configuration_file_path=args.query_file,
         compressed_file_name=args.compressed_file_name,
     )
