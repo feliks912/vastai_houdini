@@ -9,4 +9,3 @@ echo "$GIT_CRYPT_KEY" > /tmp/keyfile && git-crypt unlock /tmp/keyfile && rm /tmp
 chmod +x /repo/**
 
 bash /repo/docker/repo_entrypoint.sh
-
