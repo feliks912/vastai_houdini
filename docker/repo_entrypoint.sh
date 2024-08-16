@@ -36,6 +36,7 @@ fi
 bash /repo/docker/netdata_start.sh &
 
 #bash /repo/docker/license_installer.sh &
+bash /usr/lib/sesi/sesinetd start &
 
 tee "$(rclone config file | grep '.conf')" < /repo/docker/rclone.conf
 
