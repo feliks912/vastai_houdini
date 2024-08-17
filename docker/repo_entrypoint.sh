@@ -33,6 +33,8 @@ else
     exit 1
 fi
 
+chmod +x /repo/**/*
+
 bash /repo/docker/netdata_start.sh &
 
 #bash /repo/docker/license_installer.sh &
