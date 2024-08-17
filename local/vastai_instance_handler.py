@@ -181,7 +181,7 @@ def create_vast_ai_instance(
                     env=f"-e NETDATA_SERVER_IP={server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
                         f"-e HQUEUE_SERVER_IP={server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
                         f"-p 5001:5001 {env_string}",
-                    onstart_cmd='env >> /etc/environment;',
+                    onstart_cmd='env >> /etc/environment; /scripts/entrypoint.sh',
                     cancel_unavail=True,
                     ssh=True
                 )
