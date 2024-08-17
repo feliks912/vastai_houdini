@@ -36,7 +36,18 @@ fi
 bash /repo/docker/netdata_start.sh &
 
 #bash /repo/docker/license_installer.sh &
-bash /usr/lib/sesi/sesinetd start &
+
+curr_dir=$(pwd)
+cd /houdini/houdini20.0 || exit 1
+. ./houdini_setup
+
+/usr/lib/sesi/sesinetd -p 1715 -n 1 -o -c
+
+sleep 1
+
+sesictrl print-license || exit 1
+
+cd "$curr_dir" || exit 1
 
 tee "$(rclone config file | grep '.conf')" < /repo/docker/rclone.conf
 
