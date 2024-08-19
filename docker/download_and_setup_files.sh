@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Decode and export the authentication string from rclone.conf
-authstring=$(awk -F"=" '/account/{acc=$2} /key/{key=$2} END{print acc ":" key}' ./rclone.conf | tr -d '[:space:]' | base64 -w 0)
+authstring=$(awk -F"=" '/account/{acc=$2} /key/{key=$2} END{print acc ":" key}' /repo/docker/rclone.conf | tr -d '[:space:]' | base64 -w 0)
 
 # Create a temporary file to store the list of files to download
 echo "$FILES_TO_DOWNLOAD" | tr ',' '\n' > files_to_download.txt
