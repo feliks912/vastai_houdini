@@ -11,5 +11,6 @@ echo "Initial checksums recorded."
 /houdini/hqueue_client/hqclientd start
 
 stty sane
+echo -e '\033c'
 
 bash /repo/docker/log_monitor.sh &
