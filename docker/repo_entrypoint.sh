@@ -49,7 +49,7 @@ sleep 1
 cd "$OLDPWD" || exit 1
 
 # Call the script to handle downloads
-bash download_and_setup.sh
+bash download_and_setup_files.sh
 
 # Cleanup and finalize
 rm /houdini/hqueue_client/hqnode.pid

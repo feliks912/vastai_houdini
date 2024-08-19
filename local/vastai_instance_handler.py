@@ -178,8 +178,9 @@ def create_vast_ai_instance(
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
                     env=f"-p 5001:5001 -e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" -e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" {env_string}",
-                    onstart_cmd='env >> /etc/environment;',
+                    onstart_cmd='env >> /etc/environment; echo "setw -g mouse on" > ~/.tmux.conf',
                     cancel_unavail=True,
+                    ssh=False,
                 )
             except Exception as e:
                 print(f"Exception when calling create instance: {e}")
