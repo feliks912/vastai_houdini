@@ -1,1 +1,0 @@
-TODO recreate so sharing the project is simple. I'm still using encrypted but hardcoded secret variables so sharing the project asks from the user to build their own docker images and upload their own github repo.
