@@ -39,9 +39,6 @@ chmod +x /repo/**/*
 bash /repo/docker/netdata_start.sh &
 # bash /repo/docker/license_installer.sh &
 
-# Install necessary libraries
-apt update && apt install libnsl* libGLU* libXss* libopengl-dev -y
-
 # Setup environment
 cd /houdini/houdini20.0 || exit 1
 . ./houdini_setup

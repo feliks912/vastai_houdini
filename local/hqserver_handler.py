@@ -233,7 +233,8 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                         print("Simulation or render succeeded. Congratulations!")
 
                         print(f"Scanning for compressed file on {rclone_gcloud_name}")
-                        command = f"rclone ls {rclone_gcloud_name}:{gcloud_projects_folder} | grep {compressed_file_name}"
+                        command = f"rclone ls --config ./rclone.conf {rclone_gcloud_name}:{gcloud_projects_folder} \
+                                | grep {compressed_file_name}"
                         while True:
                             result = subprocess.run(command, shell=True, text=True, stdout=subprocess.PIPE)
                             if result.stdout.strip():
