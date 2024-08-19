@@ -132,7 +132,8 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
                 print("Uploading latest HIP file to the cloud")
 
-                child_hip_location = os.path.join('/', *trailing_project_folder.split('/')[:-1])
+                child_hip_location = os.path.join(*trailing_project_folder.split('/')[:-1])
+
                 rclone_upload_hip_to = os.path.join(gcloud_projects_folder.strip('/'), child_hip_location)
 
                 upload_command = (
@@ -148,7 +149,7 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                 compressed_file_name = format_compressed_filename(env_vars.get('COMPRESSED_FILE_NAME_TEMPLATE'), job)
 
                 files_to_download = run_hython_command(
-                    local_vars.get('HYTHON_PATH'),
+                    local_vars.get('HOUDINI_PATH'),
                     local_project_path,
                     hip_file_path,
                     job['name'].split(' ROP: ')[1]
@@ -157,7 +158,8 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                 fileset = set()
 
                 for file_path in files_to_download:
-                    fileset.add(get_project_folder_name(file_path, local_project_path))
+                    file_path = str(file_path).replace(local_project_path.rstrip("/") + "/", "")
+                    fileset.add(file_path)
 
                 if not safety_flag:
                     success, contract_id = vastai_handler.create_vast_ai_instance(
@@ -281,8 +283,10 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
 
 if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
 
-    main("localhost", 49042, 49043, "configuration.conf")
+    main("localhost", 49042, 49043, "./configuration.conf")
 
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Public server IP address')

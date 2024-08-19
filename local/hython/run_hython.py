@@ -1,15 +1,22 @@
 import subprocess
 import ast
+import os
 
-
-def run_hython_command(hython_path, base_path, hip_path, node_path):
+def run_hython_command(houdini_path, base_path, hip_path, node_path):
     # Define the command to run
-    command = [hython_path, "hython_script.py", base_path, hip_path, node_path]
+    command = (
+        f"cd {houdini_path} && "
+        f". ./houdini_setup > /dev/null && "
+        f"{houdini_path}/bin/hython {os.path.abspath('hython/hython_script.py')} "
+        f"--base-path {base_path} "
+        f"--hip-path {hip_path} "
+        f"--node-path {node_path}"
+    )
 
     # Run the command using subprocess
     try:
         # Capture the output and error if any
-        result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, text=True, executable='/bin/bash')
 
         # Process the output
         if result.stdout.strip():

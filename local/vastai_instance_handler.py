@@ -128,21 +128,19 @@ def create_vast_ai_instance(
         container_vars = env_vars.copy()
 
         with open(git_crypt_key_path, 'rb') as key:
-
             binary_key = key.read()
-
             encoded_key = base64.b64encode(binary_key)
             encoded_key_string = encoded_key.decode('utf-8')
 
-            container_vars.update({'GIT_CRYPT_KEY': encoded_key_string})
+            container_vars.update({'GIT_CRYPT_KEY': f"\"{encoded_key_string}\""})
 
         container_vars.update({
-            'PROJECT_FOLDER_NAME': project_root_folder_name,
-            'HOUDINI_PROJECTS_PATH': local_variables.get('LOCAL_PROJECTS_PATH'),
-            'COMPRESSED_FILE_NAME': compressed_file_name,
-            'RCLONE_GCLOUD_NAME': local_variables.get('RCLONE_GCLOUD_NAME'),
-            'GCLOUD_ROOT_PROJECTS_FOLDER': local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER'),
-            'FILES_TO_DOWNLOAD': ','.join(files_to_download)
+            'PROJECT_FOLDER_NAME': f"\"{project_root_folder_name}\"",
+            'HOUDINI_PROJECTS_PATH': f"\"{local_variables.get('LOCAL_PROJECTS_PATH')}\"",
+            'COMPRESSED_FILE_NAME': f"\"{compressed_file_name}\"",
+            'RCLONE_GCLOUD_NAME': f"\"{local_variables.get('RCLONE_GCLOUD_NAME')}\"",
+            'GCLOUD_ROOT_PROJECTS_FOLDER': f"\"{local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER')}\"",
+            'FILES_TO_DOWNLOAD': f"\"{','.join(files_to_download)}\""
         })
 
         env_string = ' '.join(f"-e {key}={value}" for key, value in container_vars.items())
@@ -150,8 +148,7 @@ def create_vast_ai_instance(
         print("Environment String:\n", env_string)
 
     except Exception as e:
-        print(f"Exception in creating environment variables: {e}")
-        return False, None
+        print(f"An error occurred: {e}")
 
     order = 'dph'
     limit = 1
@@ -180,10 +177,10 @@ def create_vast_ai_instance(
                     ID=offer_id,
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
-                    env=f"-e NETDATA_SERVER_IP={server_ip} -e NETDATA_SERVER_PORT={netdata_server_port} "
-                        f"-e HQUEUE_SERVER_IP={server_ip} -e HQUEUE_SERVER_PORT={hqueue_server_port} "
-                        f"-p 5001:5001 {env_string}",
-                    onstart_cmd='env >> /etc/environment; /scripts/entrypoint.sh',
+                    env=f"-e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" "
+                        f"-e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" "
+                        f"-p \"5001:5001\" {env_string}",
+                    onstart_cmd='env >> /etc/environment;',
                     cancel_unavail=True,
                     ssh=True
                 )
