@@ -89,6 +89,7 @@ def get_id_for_drive(output):
 
 
 def create_vast_ai_instance(
+        files_to_download: list,
         compressed_file_name: str,
         project_root_folder_name: str,
         server_ip: str,
@@ -141,6 +142,7 @@ def create_vast_ai_instance(
             'COMPRESSED_FILE_NAME': compressed_file_name,
             'RCLONE_GCLOUD_NAME': local_variables.get('RCLONE_GCLOUD_NAME'),
             'GCLOUD_ROOT_PROJECTS_FOLDER': local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER'),
+            'FILES_TO_DOWNLOAD': ','.join(files_to_download)
         })
 
         env_string = ' '.join(f"-e {key}={value}" for key, value in container_vars.items())

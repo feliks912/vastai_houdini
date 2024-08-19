@@ -35,8 +35,8 @@ LOC_BEGIN
 
 LOCAL_PROJECTS_PATH = "/media/feliks/Data/houdini/houdini_projects/20.0/"
 
-RCLONE_GCLOUD_NAME = "gdrive"
-GCLOUD_ROOT_PROJECTS_FOLDER = "/houdini_projects/" # The root of rclone is where it was set up locally, then add folder
+RCLONE_GCLOUD_NAME = "backblaze"
+GCLOUD_ROOT_PROJECTS_FOLDER = "/houdini-buckets/houdini_projects/" # The root of rclone is where it was set up locally, then add folder
 
 RCLONE_CONFIG_LOCATION = "/home/feliks/.config/rclone/rclone.conf"
 

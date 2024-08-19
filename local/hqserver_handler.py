@@ -9,6 +9,45 @@ from dotenv import load_dotenv
 from tabulate import tabulate
 import vastai_instance_handler as vastai_handler
 import read_configuration as conf
+import base64
+
+from hython.run_hython import run_hython_command
+
+
+def encode_account_key_from_config(config_path):
+    account = None
+    key = None
+    # Flag to determine if we are within the relevant section
+    in_relevant_section = False
+
+    try:
+        with open(config_path, 'r') as file:
+            for line in file:
+                # Check if we are entering the relevant section
+                if line.strip() == "[backblaze]":
+                    in_relevant_section = True
+                elif line.startswith('[') and in_relevant_section:
+                    # If we hit another section while we were in the relevant section
+                    break
+                elif in_relevant_section:
+                    # Extract account and key
+                    if 'account =' in line:
+                        account = line.split('=')[1].strip()
+                    elif 'key =' in line:
+                        key = line.split('=')[1].strip()
+
+        if account and key:
+            # Encode the account and key in Base64 format
+            encoded_string = base64.b64encode(f'{account}:{key}'.encode()).decode('utf-8')
+            print(f'Base64 encoded account:key string: {encoded_string}')
+            return encoded_string
+        else:
+            print("Account or key not found in the configuration.")
+            return None
+
+    except FileNotFoundError:
+        print("The specified configuration file does not exist.")
+        return None
 
 
 def get_first_directory(path):
@@ -19,15 +58,6 @@ def get_first_directory(path):
     print(f"First directory: {first_directory}")
     return first_directory
 
-
-def update_job_path(job, local_path, remote_path):
-    """Update the job path from local to remote."""
-    old_path = job['name'].split(' HIP: ')[1].split(' ')[0]
-    root_project_folder = old_path.replace(local_path, "")
-    new_path = os.path.join(remote_path, root_project_folder)
-    job['name'] = job['name'].replace(old_path, new_path)
-    new_job = {'children': job['children'], 'conditions': job['conditions']}
-    return new_job, os.path.dirname(root_project_folder)
 
 
 def get_project_folder_name(hip_file_path, base_path):
@@ -102,21 +132,36 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
                 print("Uploading latest HIP file to the cloud")
 
-                rclone_refresh_command = f"rclone config reconnect {rclone_gcloud_name}:"
-                #subprocess.run(rclone_refresh_command, shell=True)
-
                 child_hip_location = os.path.join('/', *trailing_project_folder.split('/')[:-1])
                 rclone_upload_hip_to = os.path.join(gcloud_projects_folder.strip('/'), child_hip_location)
 
-                upload_command = f"rclone copy {hip_file_path} {rclone_gcloud_name}:{rclone_upload_hip_to}"
+                upload_command = (
+                        f"rclone copy -vv "
+                        f"--config ./rclone.conf "
+                        f"{hip_file_path} {rclone_gcloud_name}:{rclone_upload_hip_to}"
+                )
+
                 subprocess.run(upload_command, shell=True)
                 print(f"Uploading {hip_file_path} to {rclone_gcloud_name}:{rclone_upload_hip_to}")
 
                 project_root_folder_name = get_project_folder_name(hip_file_path, local_project_path)
                 compressed_file_name = format_compressed_filename(env_vars.get('COMPRESSED_FILE_NAME_TEMPLATE'), job)
 
+                files_to_download = run_hython_command(
+                    local_vars.get('HYTHON_PATH'),
+                    local_project_path,
+                    hip_file_path,
+                    job['name'].split(' ROP: ')[1]
+                )
+
+                fileset = set()
+
+                for file_path in files_to_download:
+                    fileset.add(get_project_folder_name(file_path, local_project_path))
+
                 if not safety_flag:
                     success, contract_id = vastai_handler.create_vast_ai_instance(
+                        files_to_download,
                         compressed_file_name,
                         project_root_folder_name,
                         server_ip,
@@ -178,7 +223,7 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                     elif parent_status == "succeeded":
                         print("Simulation or render succeeded. Congratulations!")
 
-                        print("Scanning for compressed file on GDrive")
+                        print(f"Scanning for compressed file on {rclone_gcloud_name}")
                         command = f"rclone ls {rclone_gcloud_name}:{gcloud_projects_folder} | grep {compressed_file_name}"
                         while True:
                             result = subprocess.run(command, shell=True, text=True, stdout=subprocess.PIPE)
@@ -191,7 +236,17 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
                         vastai_handler.destroy_all_instances()
 
-                        download_command = f"rclone copy -vv {rclone_gcloud_name}:{os.path.join(gcloud_projects_folder, compressed_file_name)} {local_project_path}"
+                        authstring = encode_account_key_from_config('./rclone.conf')
+
+                        download_command = (
+                            f"rclone copy -vv "
+                            f"--config ./rclone.conf "
+                            f"--header 'workerauth:Basic {authstring}' "
+                            f"--b2-download-url https://01042010.xyz "
+                            f"{rclone_gcloud_name}:{os.path.join(gcloud_projects_folder, compressed_file_name)} "
+                            f"{local_project_path}"
+                        )
+
                         subprocess.run(download_command, shell=True)
                         print(f"Downloading {compressed_file_name} to {local_project_path}")
 
@@ -226,6 +281,9 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
 
 if __name__ == "__main__":
+
+    main("localhost", 49042, 49043, "configuration.conf")
+
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Public server IP address')
     parser.add_argument('--hqserver-port', required=True, help='Server port for HQueue')

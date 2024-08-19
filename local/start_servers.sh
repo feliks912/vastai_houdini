@@ -12,7 +12,7 @@ usage() {
     echo "  <NETDATA_PORT>      The port for the netdata server"
     echo
     echo "Example:"
-    echo "  $0 49042 /opt/hqueue/hqserver.ini"
+    echo "  $0 49042 /opt/hqueue/hqserver.ini 49043"
 }
 
 # Check if the script is executed with exactly two arguments

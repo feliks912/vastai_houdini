@@ -7,3 +7,4 @@ docker/rclone.conf filter=git-crypt diff=git-crypt
 docker/.env filter=git-crypt diff=git-crypt
 local/.json filter=git-crypt diff=git-crypt
 backblaze-cloudflare-proxy/.dev.vars filter=git-crypt diff=git-crypt
+local/rclone.conf filter=git-crypt diff=git-crypt

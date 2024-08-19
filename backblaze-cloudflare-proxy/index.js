@@ -50,7 +50,6 @@ export default {
 
         const authValue = `${env.B2_APPLICATION_KEY_ID}:${env.B2_APPLICATION_KEY}`;
         const encodedAuth = btoa(authValue); // Base64 encode the credentials
-        
         const expectedAuth = `Basic ${encodedAuth}`; // The expected format is 'Basic <base64>'
 
         // Retrieve the received Authorization header from the incoming request
