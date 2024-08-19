@@ -12,7 +12,7 @@ usable_threads=$((total_threads - 1))  # Use all but one thread
 # Function to handle downloads
 download_files() {
     echo "Downloading files listed in files_to_download.txt"
-    rclone copy -vv --config ./rclone.conf --b2-download-url https://01042010.xyz --header "workerauth:Basic ${authstring}" \
+    rclone copy -vv --config /repo/docker/rclone.conf --b2-download-url https://01042010.xyz --header "workerauth:Basic ${authstring}" \
       "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/" \
       "${HOUDINI_PROJECTS_PATH%/}/" \
       --files-from files_to_download.txt \
