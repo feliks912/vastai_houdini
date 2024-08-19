@@ -39,6 +39,9 @@ chmod +x /repo/**/*
 bash /repo/docker/netdata_start.sh &
 # bash /repo/docker/license_installer.sh &
 
+# Call the script to handle downloads
+bash /repo/docker/download_and_setup_files.sh
+
 # Setup environment
 cd /houdini/houdini20.0 || exit 1
 . ./houdini_setup
@@ -47,9 +50,6 @@ cd /houdini/houdini20.0 || exit 1
 sleep 1
 
 cd "$OLDPWD" || exit 1
-
-# Call the script to handle downloads
-bash download_and_setup_files.sh
 
 # Cleanup and finalize
 rm /houdini/hqueue_client/hqnode.pid

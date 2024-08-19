@@ -44,7 +44,7 @@ checkers=$((usable_threads / 3))
 # A smaller fraction for multi-thread streams, adjust according to needs
 multi_thread_streams=$((usable_threads / 3))
 
-rclone copy -vv --config ./rclone.conf "${HOUDINI_PROJECTS_PATH%/}/" "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/" \
+rclone copy -vv --config /repo/docker/rclone.conf "${HOUDINI_PROJECTS_PATH%/}/" "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/" \
   --transfers $transfers \
   --checkers $checkers \
   --multi-thread-streams $multi_thread_streams \

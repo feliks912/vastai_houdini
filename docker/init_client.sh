@@ -9,4 +9,7 @@ find "${HOUDINI_PROJECTS_PATH%/}" -type f -print0 | xargs -0 md5sum | sort > "/t
 echo "Initial checksums recorded."
 
 /houdini/hqueue_client/hqclientd start
+
+stty sane
+
 bash /repo/docker/log_monitor.sh &
