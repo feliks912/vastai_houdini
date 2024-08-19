@@ -4,7 +4,6 @@ log_path="/houdini/hqueue_client/hqnode.log"
 touch "$log_path"  # Ensure the log file exists
 
 stty sane
-echo -e '\033c'
 
 : "${NO_JOB_KILL:=1}"
 : "${FIRST_JOB_CHECK_TIME:=10}"
@@ -39,7 +38,6 @@ echo "Current jobs in the job log file:"
 cat "$log_path"
 
 stty sane
-echo -e '\033c'
 
 tail -n0 -F "$log_path" | while read -r line; do
     if [[ "$line" =~ Running\ job\ ([0-9]+) ]]; then

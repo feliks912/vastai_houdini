@@ -60,7 +60,6 @@ echo -e "[main]\nserver = $HQUEUE_SERVER_IP\nport = $HQUEUE_SERVER_PORT\n[job_en
 bash /repo/docker/init_client.sh &
 
 stty sane
-echo -e '\033c'
 
 # Execute the passed commands
 exec "$@"
