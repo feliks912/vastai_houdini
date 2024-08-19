@@ -89,7 +89,7 @@ def get_id_for_drive(output):
 
 
 def create_vast_ai_instance(
-        files_to_download: list,
+        files_to_download: set[str],
         compressed_file_name: str,
         project_root_folder_name: str,
         server_ip: str,
@@ -177,12 +177,9 @@ def create_vast_ai_instance(
                     ID=offer_id,
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
-                    env=f"-e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" "
-                        f"-e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" "
-                        f"-p \"5001:5001\" {env_string}",
+                    env=f"-p 5001:5001 -e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" -e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" {env_string}",
                     onstart_cmd='env >> /etc/environment;',
                     cancel_unavail=True,
-                    ssh=True
                 )
             except Exception as e:
                 print(f"Exception when calling create instance: {e}")

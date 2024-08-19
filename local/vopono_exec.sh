@@ -60,7 +60,7 @@ echo "Starting Vopono with custom command in network namespace '$netns_name'... 
 vopono exec --custom-netns-name "$netns_name" \
     --protocol openvpn --custom "/home/$user/.config/vopono/air/openvpn/${VPN_SERVER_NAME}.ovpn" \
     --keep-alive -f "$hqserver_port" -f "$netdata_port" \
-    "sudo bash $script_path > /tmp/vopono_script.log" 2>&1 | tee "$log_file" &
+    "sudo bash $script_path" 2>&1 | tee "$log_file" &
 
 vopono_job_id=$!
 

@@ -1,6 +1,6 @@
 name = "cloudflare-b2"
 
-workers_dev = false
+workers_dev = true
 compatibility_date = "2023-09-04"
 
 route = { pattern = "01042010.xyz/*", custom_domain = false }
@@ -11,7 +11,7 @@ main = "index.js"
 # You should set it as a secret in the Cloudflare dashboard or at the command line:
 # echo "<your b2 application key>" | wrangler secret put B2_APPLICATION_KEY
 [vars]
-B2_APPLICATION_KEY_ID = "0030b992b955dc40000000002"
+B2_APPLICATION_KEY_ID = "0030b992b955dc40000000003"
 B2_ENDPOINT = "s3.eu-central-003.backblazeb2.com"
 # Set BUCKET_NAME to:
 #   "A Backblaze B2 bucket name" - direct all requests to the specified bucket

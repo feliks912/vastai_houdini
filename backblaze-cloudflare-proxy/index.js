@@ -52,8 +52,11 @@ export default {
         const encodedAuth = btoa(authValue); // Base64 encode the credentials
         const expectedAuth = `Basic ${encodedAuth}`; // The expected format is 'Basic <base64>'
 
+        console.log(expectedAuth)
+
         // Retrieve the received Authorization header from the incoming request
         const receivedAuth = request.headers.get('workerauth');
+        console.log(receivedAuth)
 
         // Compare the expected authorization header to the received header
         if (expectedAuth !== receivedAuth) {

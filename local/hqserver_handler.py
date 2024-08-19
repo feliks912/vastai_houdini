@@ -157,13 +157,20 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
                 fileset = set()
 
-                for file_path in files_to_download:
-                    file_path = str(file_path).replace(local_project_path.rstrip("/") + "/", "")
-                    fileset.add(file_path)
+                fileset.add(trailing_project_folder)  # Add the hip file to the download list
+
+                if files_to_download and len(files_to_download) > 0:
+                    for file_path in files_to_download:
+                        file_path = str(file_path).replace(local_project_path.rstrip("/") + "/", "")
+                        fileset.add(file_path)
+
+                print("Files to download:")
+                for file_path in fileset:
+                    print(file_path)
 
                 if not safety_flag:
                     success, contract_id = vastai_handler.create_vast_ai_instance(
-                        files_to_download,
+                        fileset,
                         compressed_file_name,
                         project_root_folder_name,
                         server_ip,
@@ -286,7 +293,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-    main("localhost", 49042, 49043, "./configuration.conf")
+    main("213.152.186.173", 49042, 49043, "./configuration.conf")
 
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Public server IP address')
