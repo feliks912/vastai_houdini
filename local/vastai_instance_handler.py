@@ -134,13 +134,16 @@ def create_vast_ai_instance(
 
             container_vars.update({'GIT_CRYPT_KEY': f"\"{encoded_key_string}\""})
 
+        # If selective file download is set to true (1) it will employ custom logic I havent' yet defined
+        files_to_download = ','.join(files_to_download) if local_variables.get('SELECTIVE_FILE_DOWNLOAD') else ""
+
         container_vars.update({
             'PROJECT_FOLDER_NAME': f"\"{project_root_folder_name}\"",
             'HOUDINI_PROJECTS_PATH': f"\"{local_variables.get('LOCAL_PROJECTS_PATH')}\"",
             'COMPRESSED_FILE_NAME': f"\"{compressed_file_name}\"",
             'RCLONE_GCLOUD_NAME': f"\"{local_variables.get('RCLONE_GCLOUD_NAME')}\"",
             'GCLOUD_ROOT_PROJECTS_FOLDER': f"\"{local_variables.get('GCLOUD_ROOT_PROJECTS_FOLDER')}\"",
-            'FILES_TO_DOWNLOAD': f"\"{','.join(files_to_download)}\""
+            'FILES_TO_DOWNLOAD': f"\"{files_to_download}\""
         })
 
         env_string = ' '.join(f"-e {key}={value}" for key, value in container_vars.items())
@@ -178,9 +181,9 @@ def create_vast_ai_instance(
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
                     env=f"-p 5001:5001 -e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" -e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" {env_string}",
-                    onstart_cmd='env >> /etc/environment; echo "setw -g mouse on" > ~/.tmux.conf',
+                    onstart_cmd='env >> /etc/environment; echo "setw -g mouse on" > ~/.tmux.conf; /scripts/entrypoint.sh;',
                     cancel_unavail=True,
-                    ssh=False,
+                    ssh = False
                 )
             except Exception as e:
                 print(f"Exception when calling create instance: {e}")
@@ -214,6 +217,7 @@ def create_vast_ai_instance(
 if __name__ == "__main__":
     # Argument parsing
     parser = argparse.ArgumentParser(description='VastAI Instance Handler Script')
+    parser.add_argument('--files-to-download', required=True, help="A list of files to download on the container instance before running the job")
     parser.add_argument('--project-root-folder-name', required=True, help='Project root folder name')
     parser.add_argument('--server-ip', required=True, help='Netdata server IP address')
     parser.add_argument('--hqueue-server-port', required=True, help='HQueue server port')
@@ -225,6 +229,7 @@ if __name__ == "__main__":
 
     # Call the function with the provided arguments
     create_vast_ai_instance(
+        files_to_download=args.files_to_download,
         project_root_folder_name=args.project_root_folder_name,
         server_ip=args.server_ip,
         hqueue_server_port=args.hqueue_server_port,

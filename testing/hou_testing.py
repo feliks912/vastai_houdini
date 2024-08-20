@@ -1,5 +1,5 @@
-import hou
 from pathlib import Path
+import hou
 
 def get_parents(child_node: hou.Node):
     parents = []
@@ -16,8 +16,15 @@ def get_parents(child_node: hou.Node):
 
 hou.hipFile.load("/media/feliks/Data/houdini/houdini_projects/20.0/fluids_lesson_start/wineglass_01.hip")
 
-node = hou.node("/stage/usdrender_rop1")
+node:hou.Node = hou.node("/obj/wine_fluid/retime1")
 
+parms = node.parms()
+
+for parm in parms:
+    parm:hou.Parm = parm.name()
+    print(parm)
+
+quit()
 all_parents = get_parents(node)
 
 files = set()

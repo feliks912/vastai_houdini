@@ -6,7 +6,7 @@ import datetime
 import os
 import tarfile
 from dotenv import load_dotenv
-from tabulate import tabulate
+from tabulate import tabulate # type: ignore
 import vastai_instance_handler as vastai_handler
 import read_configuration as conf
 import base64
@@ -244,7 +244,8 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                                 print("File not yet present")
                                 time.sleep(1)
 
-                        vastai_handler.destroy_all_instances()
+                        #vastai_handler.destroy_all_instances()
+                        vastai_handler.stop_all_instances()
 
                         authstring = encode_account_key_from_config('./rclone.conf')
 
@@ -294,7 +295,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-    main("213.152.186.173", 49042, 49043, "./configuration.conf")
+    #main("213.152.186.173", 49042, 49043, "./configuration.conf")
 
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Public server IP address')
