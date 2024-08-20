@@ -135,7 +135,7 @@ def create_vast_ai_instance(
             container_vars.update({'GIT_CRYPT_KEY': f"\"{encoded_key_string}\""})
 
         # If selective file download is set to true (1) it will employ custom logic I havent' yet defined
-        files_to_download = ','.join(files_to_download) if local_variables.get('SELECTIVE_FILE_DOWNLOAD') else ""
+        files_to_download = ','.join(files_to_download) if local_variables.get('SELECTIVE_FILE_DOWNLOAD') == 1 else ""
 
         container_vars.update({
             'PROJECT_FOLDER_NAME': f"\"{project_root_folder_name}\"",
