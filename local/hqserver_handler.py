@@ -254,8 +254,17 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                                 print("File not yet present")
                                 time.sleep(1)
 
-                        #vastai_handler.destroy_all_instances()
-                        vastai_handler.stop_all_instances()
+                        if env_vars.get('STOP_NO_TERMINATE'):
+                            vastai_handler.stop_all_instances()
+                        else:
+                            vastai_handler.destroy_all_instances()
+
+                        download_question = input("Download stored zip? y/n: ")
+
+                        if download_question.startswith("n") or download_question.startswith("N"):
+                            print("JOB DONE")
+                            safety_flag = False
+                            break
 
                         authstring = encode_account_key_from_config('./rclone.conf')
 

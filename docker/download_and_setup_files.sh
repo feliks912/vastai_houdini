@@ -12,8 +12,8 @@ download_files() {
     if [ -z "$FILES_TO_DOWNLOAD" ]; then
         echo "Downloading the entire folder because FILES_TO_DOWNLOAD is empty."
         rclone copy -vv --config /repo/docker/rclone.conf --b2-download-url https://01042010.xyz --header "workerauth:Basic ${authstring}" \
-          "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/" \
-          "${HOUDINI_PROJECTS_PATH%/}/" \
+          "${RCLONE_GCLOUD_NAME%/}:${GCLOUD_ROOT_PROJECTS_FOLDER%/}/${PROJECT_FOLDER_NAME}/" \
+          "${HOUDINI_PROJECTS_PATH%/}/${PROJECT_FOLDER_NAME}/" \
           --transfers $usable_threads \
           --checkers $usable_threads \
           --multi-thread-streams $usable_threads \
