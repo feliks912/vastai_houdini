@@ -134,7 +134,7 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
 
                 child_hip_location = os.path.join(*trailing_project_folder.split('/')[:-1])
 
-                rclone_upload_hip_to = os.path.join(gcloud_projects_folder.strip('/'), child_hip_location)
+                rclone_upload_hip_to = os.path.join(str(gcloud_projects_folder).strip('/'), str(child_hip_location))
 
                 upload_command = (
                         f"rclone copy -vv "
@@ -148,12 +148,16 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                 project_root_folder_name = get_project_folder_name(hip_file_path, local_project_path)
                 compressed_file_name = format_compressed_filename(env_vars.get('COMPRESSED_FILE_NAME_TEMPLATE'), job)
 
+                """
                 files_to_download = run_hython_command(
                     local_vars.get('HOUDINI_PATH'),
                     local_project_path,
                     hip_file_path,
                     job['name'].split(' ROP: ')[1]
                 )
+                """
+
+                files_to_download = set()
 
                 fileset = set()
 
@@ -164,12 +168,18 @@ def main(server_ip, hqserver_port, netdata_port, configuration_file):
                         file_path = str(file_path).replace(local_project_path.rstrip("/") + "/", "")
                         fileset.add(file_path)
 
-                print("Files to download:")
-                for file_path in fileset:
-                    print(file_path)
+                if local_vars.get('SELECTIVE_FILE_DOWNLOAD'):
+                    print("Remote will download the entire project directory.")
+                else:
+                    print("Files to download:")
+                    for file_path in fileset:
+                        print(file_path)
+
+                job_type = job['name'].split(' ')[0].strip() #Simulate or Render
 
                 if not safety_flag:
                     success, contract_id = vastai_handler.create_vast_ai_instance(
+                        job_type,
                         fileset,
                         compressed_file_name,
                         project_root_folder_name,
@@ -295,7 +305,7 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-    #main("213.152.186.173", 49042, 49043, "./configuration.conf")
+    main("213.152.186.173", 49042, 49043, "./configuration.conf")
 
     parser = argparse.ArgumentParser(description='HQueue Job Monitor and VastAI Instance Creation Script')
     parser.add_argument('--server-ip', required=True, help='Public server IP address')

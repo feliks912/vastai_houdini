@@ -4,10 +4,15 @@ import json
 import argparse
 import re
 import base64
+
+import pandas
 from vastai import VastAI
 from dotenv import load_dotenv
 import read_configuration as conf
-
+from search_offers import get_results
+from tabulate import tabulate
+import pandas as pd
+from wonderwords import RandomWord
 
 def extract_disk_space(configuration_file_path):
     """Extract the disk_space value from the search query template."""
@@ -88,7 +93,24 @@ def get_id_for_drive(output):
     return None
 
 
+def get_user_selection(df: pd.DataFrame, limit: int):
+    # Ensure the limit does not exceed the length of the DataFrame
+    df = df.head(min(limit, len(df)))
+    # Slice the DataFrame to only include up to `limit` rows
+
+    print("Please select an offer by order num:")
+    print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+    offer_num = int(input("Enter selected Offer num: "))
+    if offer_num in df['num'].values:
+        offer_id = df[df['num'] == offer_num]['ID'].values[0]
+        print(f"Selected Offer ID: {offer_id}")
+        return offer_id
+    else:
+        print("Invalid selection.")
+        return None
+
 def create_vast_ai_instance(
+        job_type: str,
         files_to_download: set[str],
         compressed_file_name: str,
         project_root_folder_name: str,
@@ -153,37 +175,50 @@ def create_vast_ai_instance(
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    order = 'dph'
-    limit = 1
-
     try:
-        command = (
-            f"vastai search offers --storage {disk_space} --limit {limit} "
-            f"-o '{order}' "
-            f"'{search_query}'"
-        )
+        command = [
+            "vastai", "search", "offers",
+            "--storage", str(disk_space),
+            "-o", 'dph',
+            search_query,  # Passed as a single argument
+            "--limit", "1000", #How many results will be considered.
+            "--raw"
+        ]
 
         response = None
         while True:
-            response_lines = subprocess.run(command, capture_output=True, text=True, shell=True).stdout.split('\n')
-            response_lines = [line for line in response_lines if line]
+            offers = get_results(command, "CPU" if job_type == "Simulate" else "GPU" if job_type == "Render" else "$/h", False)
 
-            if not response_lines:
+            if offers.empty:
                 print("No instances offered for those requirements.")
                 return False, None
 
-            offer_id = int(response_lines[1].split()[0])
-            print(f"Selected Offer ID: {offer_id}")
+            offer_id = int(get_user_selection(offers, limit=5))
+
+            if not offer_id:
+                print("Bad offer selected")
+                return False, None
+
+            #response_lines = subprocess.run(command, capture_output=True, text=True, shell=True).stdout.split('\n')
+            #response_lines = [line for line in response_lines if line]
+
+            #offer_id = int(response_lines[1].split()[0])
+
+            r = RandomWord()
+
+            instance_name = r.word(include_parts_of_speech=["adjectives"]) + r.word(include_parts_of_speech=['nouns']).capitalize()
+
+            print("Attempting to create instance with name " + instance_name)
 
             try:
                 response = vast_sdk.create_instance(
                     ID=offer_id,
                     disk=disk_space,
                     image="feliks912/houdini20.0_cuda12.2:latest",
-                    env=f"-p 5001:5001 -e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" -e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" {env_string}",
+                    env=f"-h {instance_name} -p 5001:5001 -e NETDATA_SERVER_IP=\"{server_ip}\" -e NETDATA_SERVER_PORT=\"{netdata_server_port}\" -e HQUEUE_SERVER_IP=\"{server_ip}\" -e HQUEUE_SERVER_PORT=\"{hqueue_server_port}\" {env_string}",
                     onstart_cmd='env >> /etc/environment; echo "setw -g mouse on" > ~/.tmux.conf; /scripts/entrypoint.sh;',
                     cancel_unavail=True,
-                    ssh = False
+                    ssh=False
                 )
             except Exception as e:
                 print(f"Exception when calling create instance: {e}")
@@ -217,6 +252,7 @@ def create_vast_ai_instance(
 if __name__ == "__main__":
     # Argument parsing
     parser = argparse.ArgumentParser(description='VastAI Instance Handler Script')
+    parser.add_argument('--job-type', required=True, help="Render or Simulate")
     parser.add_argument('--files-to-download', required=True, help="A list of files to download on the container instance before running the job")
     parser.add_argument('--project-root-folder-name', required=True, help='Project root folder name')
     parser.add_argument('--server-ip', required=True, help='Netdata server IP address')
@@ -229,6 +265,7 @@ if __name__ == "__main__":
 
     # Call the function with the provided arguments
     create_vast_ai_instance(
+        job_type=args.job_type,
         files_to_download=args.files_to_download,
         project_root_folder_name=args.project_root_folder_name,
         server_ip=args.server_ip,
